@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: "azurevotetest1-ae16"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: "azurevotetest1-ae16"
+  template:
+    metadata:
+      labels:
+        app: "azurevotetest1-ae16"
+    spec:
+      containers:
+        - name: "azurevotetest1-ae16"
+          image: "azureappv2.azurecr.io/azurevotetest1"
+          ports:
+          - containerPort: 8080
