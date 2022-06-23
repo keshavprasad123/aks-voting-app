@@ -19,7 +19,7 @@ app.use(morgan('combined'));
 var port = process.env.PORT || 8080;
 var title = process.env.TITLE || "AKS Voting App";
 var vote1 = process.env.VOTE1VALUE || "Cats";
-var vote2 = process.env.VOTE2VALUE || "Dogs";
+var vote2 = process.env.VOTE2VALUE || "Wolves";
 var showDetails = process.env.SHOWDETAILS || false;
 var featureFlag = process.env.FEATUREFLAG || false;
 var redisHost = process.env.REDIS_HOST || "voting-storage";
