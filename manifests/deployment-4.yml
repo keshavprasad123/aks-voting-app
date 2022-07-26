@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: "kesahptest1-3a95"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: "kesahptest1-3a95"
+  template:
+    metadata:
+      labels:
+        app: "kesahptest1-3a95"
+    spec:
+      containers:
+        - name: "kesahptest1-3a95"
+          image: "sdfewqrf3qwerqwq.azurecr.io/kesahptest1"
+          ports:
+          - containerPort: 8080
