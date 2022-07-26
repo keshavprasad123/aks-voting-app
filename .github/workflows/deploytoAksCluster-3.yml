@@ -1,0 +1,63 @@
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - uses: actions/checkout@master
+    
+    - uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Create ACR
+      id: create-acr
+      run: |
+        az acr create -n keshaptestnew2 -g keshaptestnew2844a-rg --location "East US" --sku Standard --admin-enabled
+        echo "::set-output name=acr_username::`az acr credential show -n keshaptestnew2 --query username | xargs`"
+        echo "::set-output name=acr_password::`az acr credential show -n keshaptestnew2 --query passwords[0].value | xargs`"
+        echo "::add-mask::`az acr credential show -n keshaptestnew2 --query passwords[0].value | xargs`"
+
+    - uses: azure/docker-login@v1
+      with:
+        login-server: keshaptestnew2.azurecr.io
+        username: ${{ steps.create-acr.outputs.acr_username }}
+        password: ${{ steps.create-acr.outputs.acr_password }}
+
+    - name: Build and push image to ACR
+      id: build-image
+      run: |
+        docker build "$GITHUB_WORKSPACE/src/analytics/1.0" -f  "src/analytics/1.0/Dockerfile" -t keshaptestnew2.azurecr.io/kesahptest1:${{ github.sha }} --label dockerfile-path=src/analytics/1.0/Dockerfile
+        docker push keshaptestnew2.azurecr.io/kesahptest1:${{ github.sha }}
+    
+    - uses: azure/k8s-set-context@v1
+      id: login
+      with:
+         kubeconfig: ${{ secrets.aks_kesahptest1_kubeConfig }}
+    
+    - name: Create namespace
+      run: |
+        namespacePresent=`kubectl get namespace | grep kesahptest1be13 | wc -l`
+        if [ $namespacePresent -eq 0 ]
+        then
+            echo `kubectl create namespace kesahptest1be13`
+        fi
+
+    - uses: azure/k8s-create-secret@v1
+      with:
+        namespace: kesahptest1be13
+        container-registry-url: keshaptestnew2.azurecr.io
+        container-registry-username: ${{ steps.create-acr.outputs.acr_username }}
+        container-registry-password: ${{ steps.create-acr.outputs.acr_password }}
+        secret-name: kesahptest1dockerauth
+       
+    - uses: azure/k8s-deploy@v1.2
+      with:
+        namespace: kesahptest1be13
+        manifests: |
+          manifests/deployment-3.yml
+          manifests/service-3.yml
+        images: |
+          keshaptestnew2.azurecr.io/kesahptest1:${{ github.sha }}
+        imagepullsecrets: |
+          kesahptest1dockerauth   
